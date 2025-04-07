@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Memes Aleatórios</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        
+        #meme-container {
+            margin-top: 20px;
+            max-width: 500px;
+            display: none;
+            opacity: 0;
+            transform: scale(0.8);
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        
+        #meme-container.reveal {
+            display: block;
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        #meme-image {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+        }
+        
+        #random-button {
+            padding: 15px 30px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        #random-button:hover {
+            transform: scale(1.05);
+        }
+        
+        .loading {
+            margin-top: 20px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+            display: none;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        #upload-section {
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        a {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #2196F3;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        
+        a:hover {
+            background-color: #1976D2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Gerador de Memes Aleatórios</h1>
+    
+    <div id="upload-section">
+        <input type="file" id="meme-upload" accept="image/*" multiple>
+        <p>Selecione todos os memes da sua pasta!</p>
+    </div>
+    
+    <a href="create-meme.html">Criar um novo meme</a>
+    
+    <button id="random-button" disabled>Aperte aqui para um meme aleatório</button>
+    <div class="loading" id="loading-animation">Carregando meme...</div>
+    <div id="meme-container">
+        <img id="meme-image" src="" alt="Meme aleatório">
+    </div>
+
+    <script>
+        let memes = JSON.parse(localStorage.getItem('memes')) || [];
+        const memeContainer = document.getElementById('meme-container');
+        const memeImage = document.getElementById('meme-image');
+        const randomButton = document.getElementById('random-button');
+        const loadingAnimation = document.getElementById('loading-animation');
+        const memeUpload = document.getElementById('meme-upload');
+
+        if (memes.length > 0) {
+            randomButton.disabled = false;
+        }
+
+        memeUpload.addEventListener('change', function(e) {
+            const files = e.target.files;
+            if (!files || files.length === 0) return;
+
+            let loadedFiles = 0;
+            for (let file of files) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    memes.push(event.target.result);
+                    loadedFiles++;
+                    if (loadedFiles === files.length) {
+                        updateStorageAndButton();
+                    }
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function updateStorageAndButton() {
+            localStorage.setItem('memes', JSON.stringify(memes));
+            randomButton.disabled = memes.length === 0;
+        }
+
+        function showRandomMeme() {
+            if (memes.length === 0) {
+                alert('Por favor, selecione ou crie alguns memes primeiro!');
+                return;
+            }
+
+            randomButton.disabled = true;
+            loadingAnimation.style.display = 'block';
+            memeContainer.classList.remove('reveal');
+
+            setTimeout(() => {
+                const randomIndex = Math.floor(Math.random() * memes.length);
+                memeImage.src = memes[randomIndex];
+                loadingAnimation.style.display = 'none';
+                memeContainer.style.display = 'block';
+                setTimeout(() => {
+                    memeContainer.classList.add('reveal');
+                    randomButton.disabled = false;
+                }, 10);
+            }, 1000);
+        }
+
+        randomButton.addEventListener('click', showRandomMeme);
+    </script>
+</body>
+</html>
